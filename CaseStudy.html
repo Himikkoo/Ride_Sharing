@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ride Sharing App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    form {
+        max-width: 450px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      width: 97%;
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    #result {
+        margin-top: 50px;
+        margin-left: 100px;
+        margin-right: 100px;
+        padding: 20px;
+        background-color: #fff; 
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+  </style>
+<body>
+    <h1>Ride Sharing App</h1>
+  
+    <form id="rideForm">
+      <label for="sourceLocation">Source Location:</label>
+      <input type="text" id="sourceLocation" required><br><br>
+  
+      <label for="destinationLocation">Destination Location:</label>
+      <input type="text" id="destinationLocation" required>
+      <br><br>
+  
+      <center><button type="submit">Find Driver</button></center>
+    </form>
+  
+    <div id="result"></div>
+  
+  <script>
+      class Driver {
+        constructor(name, location, available) {
+          this.name = name;
+          this.currentLocation = location;
+          this.available = available;
+        }
+      }
+  
+      function calculateDistance(sourceLocation, destinationLocation) {
+        // Perform distance calculation based on coordinates or other methods
+        // In this example, we use a simple distance formula assuming each location is assigned a numeric value
+        const locationCoordinates = {
+          Gandhipuram: 1.0,
+          Ettimadai: 2.0,
+          Ukkadam: 3.0,
+          Railways: 4.0,
+          'Bus Stand': 5.0,
+          Palakkad: 6.0,
+          Kuniyamuthur: 7.0,
+          Pothanur: 8.0,
+          'R S puram': 9.0,
+        };
+  
+        const sourceCoord = locationCoordinates[sourceLocation];
+        const destinationCoord = locationCoordinates[destinationLocation];
+  
+        return Math.abs(destinationCoord - sourceCoord);
+      }
+  
+      function sortByDistance(driver1, driver2, destinationLocation) {
+        const distance1 = calculateDistance(driver1.currentLocation, destinationLocation);
+        const distance2 = calculateDistance(driver2.currentLocation, destinationLocation);
+        return distance1 < distance2;
+      }
+  
+      function confirmRide(driverName) {
+        // In a real-world application, you would implement a confirmation mechanism (e.g., sending a notification to the driver)
+        // For simplicity, we'll assume the ride is confirmed automatically
+        return true;
+      }
+  
+      function calculatePrice(distance) {
+        // In a real-world application, you would implement a pricing mechanism based on distance and other factors
+        // For simplicity, we'll assume a fixed price per unit distance
+        const pricePerUnitDistance = 2.5; // Assuming the price is in rupees
+        return distance * pricePerUnitDistance;
+      }
+  
+      function findAvailableDriver(driverLocations, sourceLocation, destinationLocation) {
+        const availableDrivers = new Map();
+        const distanceQueue = [];
+  
+        // Find available drivers in the source location and calculate their distances
+        if (driverLocations[sourceLocation]) {
+          for (const driver of driverLocations[sourceLocation]) {
+            if (driver.available) {
+              const distance = calculateDistance(driver.currentLocation, destinationLocation);
+              availableDrivers.set(driver, distance);
+              distanceQueue.push(distance);
+            }
+          }
+        }
+  
+        // Sort the distances in ascending order
+        distanceQueue.sort((a, b) => a - b);
+  
+        // Find the closest available driver and assign the ride
+        for (const distance of distanceQueue) {
+          for (const [driver, driverDistance] of availableDrivers) {
+            if (driverDistance === distance) {
+              // Confirm the ride and calculate the price
+              if (confirmRide(driver.name)) {
+                const price = calculatePrice(driverDistance);
+  
+                // Update driver's current location and availability
+                driver.currentLocation = destinationLocation;
+                driver.available = false;
+  
+                displayOutput(driver.name, driverDistance, price);
+                return; // Exit the function after finding a driver
+              }
+            }
+          }
+        }
+  
+        displayOutput("No available drivers found in the source location.", null, null);
+      }
+  
+      function displayOutput(driverName, distance, price) {
+        const resultElement = document.getElementById("result");
+        resultElement.innerHTML = "";
+  
+        if (driverName) {
+          const driverNameElement = document.createElement("p");
+          driverNameElement.textContent = "Assigned driver: " + driverName;
+          resultElement.appendChild(driverNameElement);
+  
+          if (distance) {
+            const distanceElement = document.createElement("p");
+            distanceElement.textContent = "Distance: " + distance + " kms";
+            resultElement.appendChild(distanceElement);
+          }
+  
+          if (price) {
+            const priceElement = document.createElement("p");
+            priceElement.textContent = "Price: " + price + " Rupees"; // ₹ symbol represents Indian Rupees
+            resultElement.appendChild(priceElement);
+          }
+        } else {
+          const noDriverElement = document.createElement("p");
+          noDriverElement.textContent = "No available drivers found in the source location.";
+          resultElement.appendChild(noDriverElement);
+        }
+      }
+  
+      // Driver data structure
+      const driverLocations = {
+        Gandhipuram: [
+          new Driver("Aarav", "Gandhipuram", true),
+          new Driver("Aanya", "Gandhipuram", false),
+          new Driver("Aryan", "Gandhipuram", true),
+          new Driver("Balu", "Gandhipuram", true),
+        ],
+  
+        Ettimadai: [
+          new Driver('Aadi', 'Ettimadai', true),
+          new Driver('Aaradhya', 'Ettimadai', false),
+          new Driver('Aakash', 'Ettimadai', true),
+          new Driver('Aahana', 'Ettimadai', true),
+        ],
+        Ukkadam: [
+          new Driver('Aayush', 'Ukkadam', true),
+          new Driver('Aditi', 'Ukkadam', true),
+          new Driver('Advait', 'Ukkadam', true),
+          new Driver('Akshara', 'Ukkadam', true),
+          new Driver('Ameya', 'Ukkadam', true),
+          new Driver('Anika', 'Ukkadam', true),
+        ],
+        Railways: [
+          new Driver('Aryan', 'Railways', true),
+          new Driver('Anaya', 'Railways', false),
+          new Driver('Aarav', 'Railways', true),
+          new Driver('Ananya', 'Railways', true),
+        ],
+        'Bus Stand': [
+          new Driver('Aditya', 'Bus Stand', true),
+          new Driver('Dheva', 'Bus Stand', true),
+          new Driver('Aryan', 'Bus Stand', false),
+          new Driver('Anika', 'Bus Stand', true),
+          new Driver('Aarav', 'Bus Stand', true),
+          new Driver('Moneesh', 'Bus Stand', true),
+        ],
+        Palakkad: [
+          new Driver('Sabari', 'Palakkad', true),
+          new Driver('Siva', 'Palakkad', true),
+          new Driver('Arjun', 'Palakkad', true),
+          new Driver('Pranav', 'Palakkad', true),
+          new Driver('Aarush', 'Palakkad', false),
+          new Driver('Aadhya', 'Palakkad', true),
+          new Driver('Arnav', 'Palakkad', true),
+        ],
+        Kuniyamuthur: [
+          new Driver('Aayush', 'Kuniyamuthur', true),
+          new Driver('Kavin', 'Kuniyamuthur', true),
+          new Driver('Aarav', 'Kuniyamuthur', true),
+          new Driver('Sriroop', 'Kuniyamuthur', true),
+        ],
+        Pothanur: [
+          new Driver('Aarav', 'Pothanur', true),
+          new Driver('Aaradhya', 'Pothanur', true),
+          new Driver('Aarush', 'Pothanur', false),
+          new Driver('Makarand', 'Pothanur', true),
+          new Driver('Aayush', 'Pothanur', true),
+          new Driver('Deepak', 'Pothanur', true),
+        ],
+        'R S puram': [
+          new Driver('Arjun', 'R S puram', true),
+          new Driver('Simbu', 'R S puram', true),
+          new Driver('Aarav', 'R S puram', true),
+          new Driver('Binil', 'R S puram', false),
+          new Driver('Aditya', 'R S puram', true),
+          new Driver('Dulquer', 'R S puram', true),
+        ],
+      };
+  
+      // Event listener for the form submission
+      document.getElementById("rideForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+  
+        const sourceLocation = document.getElementById("sourceLocation").value;
+        const destinationLocation = document.getElementById("destinationLocation").value;
+  
+        findAvailableDriver(driverLocations, sourceLocation, destinationLocation);
+      });
+  </script>
+  </body>
+  </html>
+  
+  
+  
+  
